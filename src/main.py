@@ -28,7 +28,9 @@ def confirm_selection():
             applier.apply(jobList[selection.get()])
     print("Finished Applying")
 
-confirmButton = ttk.Button(root, text = "Submit", command = confirm_selection)
+confirm_selection_thread = threading.Thread(target = confirm_selection, daemon = True)
+
+confirmButton = ttk.Button(root, text = "Submit", command = confirm_selection_thread.start)
 
 while(not applier.ranThrough):
     time.sleep(1)

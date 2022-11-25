@@ -11,6 +11,7 @@ import time
 import threading
 
 root = Tk()
+root.wm_title("ApplyTool")
 
 applier = ApplierInstance("Username", "Password", "Software Engineer")
 applier.start()

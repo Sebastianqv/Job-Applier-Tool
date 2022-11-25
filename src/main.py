@@ -23,15 +23,19 @@ def on_close():
 
 jobSelection = []
 checkButtons = []
+
+confirmButton = ttk.Button(root, text = "Submit")
 def confirm_selection():
+    confirmButton.config(state = DISABLED)
     for selection in jobSelection:
         if selection.get() != "":
             applier.apply(jobList[selection.get()])
     print("Finished Applying")
+    confirmButton.config(state = NORMAL)
 
 confirm_selection_thread = threading.Thread(target = confirm_selection, daemon = True)
 
-confirmButton = ttk.Button(root, text = "Submit", command = confirm_selection_thread.start)
+confirmButton.config(command = confirm_selection_thread.start)
 
 while(not applier.ranThrough):
     time.sleep(1)

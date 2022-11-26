@@ -1,58 +1,65 @@
 # TODO:
-# - Reformat for letting users input their Username, Password, and Field
-# - Add error handlers for the above
-# - Include multithreading to prevent GUI window freeze
+# - Add error handlers for the login
 
+import sys
+import threading
 from tkinter import *
 from tkinter import ttk
-from applier import ApplierInstance
-import sys
-import time
-import threading
+from Frames.applier import ApplierInstance
+from Frames.login import FrameLogin
+from Frames.selection import FrameSelection
 
-root = Tk()
-root.wm_title("ApplyTool")
-
-applier = ApplierInstance("Username", "Password", "Software Engineer")
-applier.start()
-
-def on_close():
-    root.destroy()
-    applier.exit()
-    sys.exit()
-
-jobSelection = []
-checkButtons = []
-
-confirmButton = ttk.Button(root, text = "Submit")
-def confirm_selection():
-    confirmButton.config(state = DISABLED)
-    for selection in jobSelection:
-        if selection.get() != "":
-            applier.apply(jobList[selection.get()])
-    print("Finished Applying")
-    confirmButton.config(state = NORMAL)
-
-confirm_selection_thread = threading.Thread(target = confirm_selection, daemon = True)
-
-confirmButton.config(command = confirm_selection_thread.start)
-
-while(not applier.ranThrough):
-    time.sleep(1)
-
-jobList = applier.getJobList()
-
-for jobName in jobList:
-    var = StringVar()
-    checkbutton = ttk.Checkbutton(root, text = jobName, variable = var, onvalue = jobName, offvalue = "")
+class ApplyController(Tk):
     
-    jobSelection.append(var)
-    checkButtons.append(checkbutton)
+    container:Frame
+    applier:ApplierInstance
+    frameCurrent:Frame
+    frameLogin:FrameLogin
+    frameSelection:FrameSelection
+    frameQuery:Frame
+    frameLoading:Frame
 
+    def __init__(self, *args, **kwargs):
+        Tk.__init__(self, *args, **kwargs)
+        self.wm_title("ApplyTool")
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-for button in checkButtons:
-    button.pack()
-confirmButton.pack()
+        self.container = Frame(self)
+        self.container.pack(side= TOP, fill= BOTH, expand = True)
+        self.container.grid_rowconfigure(0, weight = 1)
+        self.container.grid_columnconfigure(0, weight = 1)
+        self.frameLoading = self.getLoading()
 
-root.protocol("WM_DELETE_WINDOW", on_close)
-root.mainloop()
+        self.frameLogin = FrameLogin(self.container, self)
+
+    def login(self, username:str, password:str, field:str):
+        self.frameLoading.tkraise()
+        self.frameCurrent = self.frameLoading
+        self.frameLogin.destroy()
+        self.applier = ApplierInstance(username, password, field)
+        applier_start_thread = threading.Thread(target = self.applier.start, daemon = True)
+        applier_start_thread.start()
+        self.frameSelection = FrameSelection(self.container, self, self.applier)
+        self.frameTransition(self.frameSelection)
+
+    #Transitions to the passed frame
+    def frameTransition(self, frameNext:Frame):
+        self.frameCurrent.grid_remove()
+        frameNext.grid()
+        self.frameCurrent = frameNext
+    
+    def getLoading(self):
+        loadingFrame = Frame(self.container)
+        loadingLabel = ttk.Label(loadingFrame, text = "Loading...")
+        loadingLabel.grid(row = 0,column = 0)
+        loadingFrame.grid(row = 0, column = 0)
+        return loadingFrame
+
+    def on_close(self):
+        if self.applier:
+            self.applier.exit()
+        self.destroy()
+        sys.exit()
+
+app = ApplyController()
+app.mainloop()

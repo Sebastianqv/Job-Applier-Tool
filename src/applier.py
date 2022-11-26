@@ -11,7 +11,7 @@ import time
 class ApplierInstance():
     """Class for creating Applier instances."""
 
-    def __init__(self, username, password, fieldName, onlyEasyApply = True):
+    def __init__(self, username:str, password:str, fieldName:str, onlyEasyApply:bool = True):
         """Constructor for the ApplierInstance class."""
         service = Service(executable_path="./webDrivers/chromedriver")
         self.driver = webdriver.Chrome(service=service)
@@ -77,7 +77,7 @@ class ApplierInstance():
         """
         return self.jobList
 
-    def apply(self, url):
+    def apply(self, url:str):
         """
         Begin the process of applying to a job.
 
